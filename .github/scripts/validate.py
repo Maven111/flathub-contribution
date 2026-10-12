@@ -1,5 +1,6 @@
-import re
 import os
+import re
+import sys
 
 
 def validate_title(title: str) -> int:
@@ -13,7 +14,7 @@ def validate_title(title: str) -> int:
     split = appid.split(".")
 
     if (
-        len(split) > 255
+        len(appid) > 255
         or len(split) < 3
         or not all(re.match(regex, sp) for sp in split)
     ):
@@ -23,7 +24,7 @@ def validate_title(title: str) -> int:
 
 
 if __name__ == "__main__":
-    title = os.environ["PR_TITLE"]
+    title = os.environ.get("PR_TITLE", "")
     exit_code = validate_title(title)
     print(f"EXIT_CODE={exit_code}")
-    exit(0)
+    sys.exit(0)

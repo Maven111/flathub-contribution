@@ -1,16 +1,21 @@
 import datetime
 import os
+import sys
 import time
 
 import github
 from github.GithubException import (
-    RateLimitExceededException,
     GithubException,
+    RateLimitExceededException,
 )
 
 
 def main() -> None:
-    token = os.environ["GITHUB_TOKEN"]
+    token = os.environ.get("GITHUB_TOKEN")
+    if not token:
+        print("GITHUB_TOKEN not set", file=sys.stderr)
+        sys.exit(1)
+
     g = github.Github(auth=github.Auth.Token(token))
 
     org = g.get_organization("flathub")
@@ -32,16 +37,15 @@ def main() -> None:
                 )
                 collaborators = repo.get_collaborators(affiliation="direct")
                 colb_count = collaborators.totalCount
+            except RateLimitExceededException:
+                print("Rate limited")
+                time.sleep(g.rate_limiting_resettime - time.time() + 10)
+                continue
             except GithubException:
                 last_commit_time = datetime.datetime.now(
                     datetime.timezone.utc
                 ) + datetime.timedelta(seconds=10)
                 colb_count = 1
-                pass
-            except RateLimitExceededException:
-                print("Rate limited")
-                time.sleep(g.rate_limiting_resettime - time.time() + 10)
-                continue
 
             if colb_count == 0 and last_commit_time < earliest:
                 print(

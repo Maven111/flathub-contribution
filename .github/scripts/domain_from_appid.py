@@ -1,7 +1,7 @@
 # ONLY handle appids that need to use `org.flathub.VerifiedApps.txt`
 
-import sys
 import re
+import sys
 from publicsuffixlist import PublicSuffixList
 
 LOGINS = (
@@ -72,10 +72,6 @@ def get_domain(appid: str) -> str:
             return f"{name}.{domain}.io".lower()
         else:
             return f"{name}.{domain}.{tld}".lower()
-    elif appid.startswith(("io.sourceforge.", "net.sourceforge.")):
-        [tld, domain, projectname] = appid.split(".")[0:3]
-        projectname = demangle(projectname)
-        return f"{projectname}.{domain}.io".lower()
     else:
         fqdn = ".".join(reversed(appid.split("."))).lower()
         psl = PublicSuffixList()
@@ -88,6 +84,9 @@ def get_domain(appid: str) -> str:
 
 
 if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: domain_from_appid.py <PR title or App ID>", file=sys.stderr)
+        sys.exit(1)
     # PR title as input "(Aa)dd com.foo.bar"
-    appid = re.sub(r"^\s*add\s+", "", sys.argv[1], flags=re.IGNORECASE)
+    appid = re.sub(r"^\s*add\s+", "", sys.argv[1], flags=re.IGNORECASE).strip()
     print(get_domain(appid).strip())
